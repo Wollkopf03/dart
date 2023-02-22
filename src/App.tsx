@@ -43,6 +43,7 @@ export function App() {
 					}}>
 						<Tab label="Home" value="" />
 						<Tab label="Players" value="players" />
+						<Tab label="Tournaments" value="tournaments" />
 					</Tabs>
 				</Grid>
 			</AppBar>

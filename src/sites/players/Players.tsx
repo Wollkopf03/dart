@@ -2,8 +2,8 @@ import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid,
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useLoaderData } from "react-router";
-import { API_BASE_URL } from "..";
-import { useAuth } from "../hooks/useAuth";
+import { API_BASE_URL } from "../..";
+import { useAuth } from "../../hooks/useAuth";
 import { PlayerEntry, PlayerType } from "./PlayerEntry";
 
 export const loadPlayers = async (): Promise<PlayerType[]> => {

@@ -2,8 +2,8 @@ import { Close } from '@mui/icons-material'
 import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid, IconButton, Paper, TextField, Typography } from '@mui/material'
 import axios from 'axios'
 import { useEffect, useState } from 'react'
-import { API_BASE_URL } from '..'
-import { useAuth } from '../hooks/useAuth'
+import { API_BASE_URL } from '../..'
+import { useAuth } from '../../hooks/useAuth'
 
 export type PlayerType = {
 	uid: number,
@@ -19,14 +19,14 @@ type Props = PlayerType & {
 
 export function PlayerEntry({ uid, firstName, lastName, legs_won, legs_lost, reloadCB }: Props) {
 	const [open, setOpen] = useState(false)
-	const [name, setName] = useState("")
+	const [confirmName, setConfirmName] = useState("")
 	const [error, setError] = useState<string | undefined>()
 	const auth = useAuth()
 
 	const percentage = ((legs_won / (legs_won + legs_lost)).toFixed(3)).substring((legs_won > 0 && legs_lost === 0) || legs_won + legs_lost === 0 ? 0 : 1)
 
 	const removePlayer = async () => {
-		if (name === firstName + " " + lastName) {
+		if (confirmName === firstName + " " + lastName) {
 			const data = await axios.post(API_BASE_URL + "removePlayer/", { token: localStorage.getItem("token")!, uid })
 				.then(response => response.data as { success: boolean } | { error: string })
 			if ("error" in data)
@@ -37,7 +37,7 @@ export function PlayerEntry({ uid, firstName, lastName, legs_won, legs_lost, rel
 					setError(data.error)
 			else {
 				setOpen(false)
-				setName("")
+				setConfirmName("")
 				setError(undefined)
 				reloadCB()
 			}
@@ -49,7 +49,7 @@ export function PlayerEntry({ uid, firstName, lastName, legs_won, legs_lost, rel
 
 	useEffect(() => {
 		setError(undefined);
-	}, [name])
+	}, [confirmName])
 
 	return (<>
 		<Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
@@ -64,10 +64,10 @@ export function PlayerEntry({ uid, firstName, lastName, legs_won, legs_lost, rel
 					<Grid item lg={12}>
 						<TextField
 							id="name"
-							value={name}
+							value={confirmName}
 							label="Name"
 							fullWidth
-							onChange={(e) => setName(e.target.value)}
+							onChange={(e) => setConfirmName(e.target.value)}
 						/>
 					</Grid>
 					{error && <Grid item lg={12}><Alert sx={{ mt: 3 }} severity="error">{error}</Alert></Grid>}

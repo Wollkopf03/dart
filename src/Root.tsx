@@ -2,7 +2,8 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { App } from "./App";
 import { Home } from "./sites/Home";
 import { Login } from "./sites/Login";
-import { loadPlayers, Players } from "./sites/Players";
+import { loadPlayers, Players } from "./sites/players/Players";
+import { loadTournaments, Tournaments } from "./sites/tournaments/Tournaments";
 
 export function Root() {
 	return (
@@ -12,7 +13,8 @@ export function Root() {
 			children: [
 				{ index: true, element: <Home /> },
 				{ path: "/login", element: <Login /> },
-				{ path: "/players", element: <Players />, loader: loadPlayers }
+				{ path: "/players", element: <Players />, loader: loadPlayers },
+				{ path: "/tournaments", element: <Tournaments />, loader: loadTournaments }
 			]
 		}])} />
 	)
