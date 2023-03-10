@@ -1,56 +1,22 @@
 import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid, TextField } from "@mui/material";
-import axios from "axios";
 import { useEffect, useState } from "react";
-import { useLoaderData } from "react-router";
-import { API_BASE_URL } from "..";
-import { useAuth } from "../hooks/useAuth";
-import { PlayerEntry, PlayerType } from "./PlayerEntry";
-
-export const loadPlayers = async (): Promise<PlayerType[]> => {
-	const data = await axios.get<{ players: PlayerType[] } | { error: string }>(API_BASE_URL + "loadPlayers/")
-		.then(response => response.data)
-		.catch(e => {
-			console.error(e)
-			return { error: e }
-		})
-	if ("error" in data)
-		console.log(data.error)
-	else
-		return data.players
-	return []
-}
+import { useBreadcrumbs } from "../../hooks/useBreadcrumbs";
+import { usePlayers } from "../../hooks/usePlayers";
+import { PlayerEntry } from "./PlayerEntry";
 
 export function Players() {
 	const [open, setOpen] = useState(false);
 	const [firstName, setFirstName] = useState("")
 	const [lastName, setLastName] = useState("")
-	const [players, setPlayers] = useState<PlayerType[]>(useLoaderData() as PlayerType[])
-	const auth = useAuth()
+	const { players, addPlayer } = usePlayers()
 
 	const [error, setError] = useState<string | undefined>()
 
-	const addPlayer = async () => {
-		if (firstName === "" || lastName === "")
-			return
-		const data = await axios.post(API_BASE_URL + "addPlayer/", { token: localStorage.getItem("token")!, firstName, lastName })
-			.then(response => response.data as { success: boolean } | { error: string })
-		if ("error" in data) {
-			if (data.error === "Token expired") {
-				auth.refresh()
-				addPlayer()
-			} else
-				setError(data.error)
-			return
-		}
-		setOpen(false)
-		setFirstName("")
-		setLastName("")
-		reload()
-	}
+	const { setPath } = useBreadcrumbs()
 
-	const reload = async () => {
-		setPlayers(await loadPlayers())
-	}
+	useEffect(() => {
+		setPath([{ name: "Home", href: "/" }, { name: "Players", href: "/players" }])
+	}, [setPath])
 
 	useEffect(() => {
 		setError(undefined);
@@ -86,7 +52,14 @@ export function Players() {
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={() => setOpen(false)}>Cancel</Button>
-					<Button onClick={addPlayer}>Add</Button>
+					<Button onClick={() => {
+						if (firstName === "" || lastName === "")
+							return
+						addPlayer({ firstName, lastName })
+						setOpen(false)
+						setFirstName("")
+						setLastName("")
+					}}>Add</Button>
 				</DialogActions>
 			</Dialog>
 			<Button onClick={() => setOpen(true)}>+ Add Player</Button>
@@ -95,7 +68,7 @@ export function Players() {
 				const b_perc = isNaN(b.legs_won / (b.legs_won + b.legs_lost)) ? 0 : b.legs_won / (b.legs_won + b.legs_lost)
 				return b_perc - a_perc
 			})
-				.map((player, index) => <PlayerEntry key={index} {...player} reloadCB={reload} />)}
+				.map((player, index) => <PlayerEntry key={index} {...player} />)}
 		</>
 	)
 }
