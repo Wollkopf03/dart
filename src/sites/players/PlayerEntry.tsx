@@ -1,51 +1,15 @@
 import { Close } from '@mui/icons-material'
 import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid, IconButton, Paper, TextField, Typography } from '@mui/material'
-import axios from 'axios'
 import { useEffect, useState } from 'react'
-import { API_BASE_URL } from '../..'
-import { useAuth } from '../../hooks/useAuth'
+import { PlayerType, usePlayers } from '../../hooks/usePlayers'
 
-export type PlayerType = {
-	uid: number,
-	firstName: string,
-	lastName: string,
-	legs_won: number,
-	legs_lost: number
-}
-
-type Props = PlayerType & {
-	reloadCB: () => void
-}
-
-export function PlayerEntry({ uid, firstName, lastName, legs_won, legs_lost, reloadCB }: Props) {
+export function PlayerEntry({ uid, firstName, lastName, legs_won, legs_lost }: PlayerType) {
 	const [open, setOpen] = useState(false)
 	const [confirmName, setConfirmName] = useState("")
 	const [error, setError] = useState<string | undefined>()
-	const auth = useAuth()
+	const { removePlayer } = usePlayers()
 
 	const percentage = ((legs_won / (legs_won + legs_lost)).toFixed(3)).substring((legs_won > 0 && legs_lost === 0) || legs_won + legs_lost === 0 ? 0 : 1)
-
-	const removePlayer = async () => {
-		if (confirmName === firstName + " " + lastName) {
-			const data = await axios.post(API_BASE_URL + "removePlayer/", { token: localStorage.getItem("token")!, uid })
-				.then(response => response.data as { success: boolean } | { error: string })
-			if ("error" in data)
-				if (data.error === "Token expired") {
-					auth.refresh()
-					removePlayer()
-				} else
-					setError(data.error)
-			else {
-				setOpen(false)
-				setConfirmName("")
-				setError(undefined)
-				reloadCB()
-			}
-		} else {
-			setError("Name incorrect")
-		}
-
-	}
 
 	useEffect(() => {
 		setError(undefined);
@@ -63,6 +27,7 @@ export function PlayerEntry({ uid, firstName, lastName, legs_won, legs_lost, rel
 					</Grid>
 					<Grid item lg={12}>
 						<TextField
+							autoFocus
 							id="name"
 							value={confirmName}
 							label="Name"
@@ -75,7 +40,14 @@ export function PlayerEntry({ uid, firstName, lastName, legs_won, legs_lost, rel
 			</DialogContent>
 			<DialogActions>
 				<Button onClick={() => setOpen(false)}>Cancel</Button>
-				<Button onClick={removePlayer}>Delete</Button>
+				<Button onClick={() => {
+					if (confirmName === firstName + " " + lastName) {
+						removePlayer(uid)
+						setOpen(false)
+					} else
+						setError("Name incorrect")
+
+				}}>Delete</Button>
 			</DialogActions>
 		</Dialog>
 		<Paper variant='outlined' sx={{ my: 1, p: 1 }}>

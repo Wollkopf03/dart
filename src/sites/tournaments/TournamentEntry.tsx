@@ -1,65 +1,35 @@
 import { Close } from '@mui/icons-material'
 import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid, IconButton, Paper, TextField, Typography } from '@mui/material'
-import axios from 'axios'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { API_BASE_URL } from '../..'
-import { useAuth } from '../../hooks/useAuth'
+import { TournamentType, useTournaments } from '../../hooks/useTournaments'
 
-export type TournamentType = {
-	uid: number,
-	name: string,
-	created: number,
-	members: number[],
-	rounds: number,
-	target: number,
-	legs: number,
-	sets: number,
-	ko: number,
-	finalists: number
-}
-
-type Props = TournamentType & {
-	reloadCB: () => void
-}
-
-export function TournamentEntry({ uid, name, created, members, reloadCB }: Props) {
+export function TournamentEntry({ uid, name, members }: TournamentType) {
 	const [open, setOpen] = useState(false)
 	const [confirmName, setConfirmName] = useState("")
 	const [error, setError] = useState<string | undefined>()
-	const auth = useAuth()
+	const { removeTournament } = useTournaments()
 	const navigate = useNavigate()
 
-	const removeTournament = async () => {
+	const submit = () => {
 		if (name === confirmName) {
-			const data = await axios.post(API_BASE_URL + "removeTournament/", { token: localStorage.getItem("token")!, uid })
-				.then(response => response.data as { success: boolean } | { error: string })
-			if ("error" in data)
-				if (data.error === "Token expired") {
-					auth.refresh()
-					removeTournament()
-				} else
-					setError(data.error)
-			else {
-				setOpen(false)
-				setConfirmName("")
-				setError(undefined)
-				reloadCB()
-			}
-		} else {
+			removeTournament(uid)
+			setOpen(false)
+			setConfirmName("")
+			setError(undefined)
+		} else
 			setError("Name incorrect")
-		}
-
 	}
 
 	useEffect(() => {
 		setError(undefined);
 	}, [name])
 
-	console.log(members)
-
 	return (<>
-		<Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
+		<Dialog open={open} onClose={() => {
+			setOpen(false)
+			setConfirmName("")
+		}} fullWidth maxWidth="sm">
 			<DialogTitle>Remove Tournament</DialogTitle>
 			<DialogContent>
 				<Grid container spacing={3}>
@@ -70,6 +40,7 @@ export function TournamentEntry({ uid, name, created, members, reloadCB }: Props
 					</Grid>
 					<Grid item lg={12}>
 						<TextField
+							autoFocus
 							id="confirmName"
 							value={confirmName}
 							label="Name"
@@ -81,21 +52,27 @@ export function TournamentEntry({ uid, name, created, members, reloadCB }: Props
 				</Grid>
 			</DialogContent>
 			<DialogActions>
-				<Button onClick={() => setOpen(false)}>Cancel</Button>
-				<Button onClick={removeTournament}>Delete</Button>
+				<Button onClick={() => {
+					setOpen(false)
+					setConfirmName("")
+				}}>Cancel</Button>
+				<Button onClick={submit}>Delete</Button>
 			</DialogActions>
 		</Dialog>
-		<Paper variant='outlined' sx={{ my: 1, p: 1 }}> {/* TODO */}
+		<Paper variant='outlined' sx={{ my: 1, p: 1 }} onClick={() => navigate("/tournament/" + uid)}>
 			<Grid container display="flex">
 				<Grid item sm={2}>
 					<Typography sx={{ m: 1 }}>{name}</Typography>
 				</Grid>
 				<Grid item sm={9} display="flex">
-					<Typography sx={{ m: 1, color: 'gray', margin: "auto" }}>{new Date(created * 1000).toLocaleDateString()}</Typography>
+					<Typography sx={{ m: 1, color: 'gray', margin: "auto" }}>{new Date(uid).toLocaleString()}</Typography>
 					<Typography sx={{ m: 1, color: 'gray', margin: "auto" }}>{members.length} Members</Typography>
 				</Grid>
 				<Grid item sm={1}>
-					<IconButton sx={{ float: "right" }} onClick={() => setOpen(true)}><Close /></IconButton>
+					<IconButton sx={{ float: "right" }} onClick={(e) => {
+						setOpen(true);
+						e.stopPropagation();
+					}}><Close /></IconButton>
 				</Grid>
 			</Grid>
 		</Paper>
