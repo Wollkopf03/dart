@@ -43,7 +43,8 @@ export function Tournament() {
 		for (let roundNr = 1; roundNr < players.length; roundNr++) {
 			const round: { uid: number, players: [number, number] }[] = []
 			for (let i = 0; i < players.length / 2; i++)
-				round.push({ uid: uid++, players: [players[i], players[players.length - 1 - i]] });
+				if (players[i] !== -1 && players[players.length - 1 - i] !== -1)
+					round.push({ uid: uid++, players: [players[i], players[players.length - 1 - i]] });
 			games.push({ games: round })
 			players.push(players.splice(1, 1)[0])
 		}
