@@ -17,10 +17,12 @@ type PlayerSetup = {
 const PlayersContext = createContext<{
 	players: PlayerType[],
 	addPlayer: (player: PlayerSetup) => void,
+	getPlayer: (uid: number) => PlayerType | undefined,
 	removePlayer: (uid: number) => void
 }>({
 	players: [],
 	addPlayer: (player: PlayerSetup) => { },
+	getPlayer: (uid: number) => undefined,
 	removePlayer: (uid: number) => { },
 })
 
@@ -38,12 +40,17 @@ export function PlayersProvider({ children }: { children: ReactNode }) {
 		}])
 	}
 
+	const getPlayer = (uid: number) => {
+		const player = players.filter(p => p.uid === uid)
+		return player.length === 0 ? undefined : player[0]
+	}
+
 	const removePlayer = (uid: number) => {
 		setPlayers(players => players.filter(player => player.uid !== uid))
 	}
 
 	return (
-		<PlayersContext.Provider value={{ players, addPlayer, removePlayer }}>
+		<PlayersContext.Provider value={{ players, addPlayer, getPlayer, removePlayer }}>
 			{children}
 		</PlayersContext.Provider>
 	)
